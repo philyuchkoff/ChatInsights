@@ -10,6 +10,40 @@ import os
 STREAM_THRESHOLD = 50 * 1024 * 1024  # 50 MB
 
 
+class ExportLoadError(ValueError):
+    """Raised when an export file cannot be read or has an invalid structure."""
+
+
+def load_json_file(file_path):
+    """Load a JSON file with friendly error handling.
+
+    Handles UTF-8 BOM, empty files and invalid JSON with clear messages.
+    """
+    if not os.path.exists(file_path):
+        raise ExportLoadError(f"File not found: {file_path}")
+
+    try:
+        file_size = os.path.getsize(file_path)
+    except OSError as e:
+        raise ExportLoadError(f"Cannot read file: {e}") from e
+
+    if file_size == 0:
+        raise ExportLoadError("The file is empty (0 bytes).")
+
+    try:
+        with open(file_path, 'r', encoding='utf-8-sig') as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        raise ExportLoadError(
+            f"Invalid JSON in {os.path.basename(file_path)} at line {e.lineno}, "
+            f"column {e.colno}: {e.msg}. Make sure it is a valid export file."
+        ) from e
+    except UnicodeDecodeError as e:
+        raise ExportLoadError(
+            f"The file is not valid UTF-8 text ({e}). Exports must be JSON files."
+        ) from e
+
+
 def use_streaming(file_path):
     """Return True if the export file is large enough to warrant streaming."""
     try:

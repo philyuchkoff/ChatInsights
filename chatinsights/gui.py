@@ -32,7 +32,7 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
-from .io import iter_conversations, use_streaming
+from .io import ExportLoadError, iter_conversations, load_json_file, use_streaming
 from .parsers import detect_platform
 
 logger = logging.getLogger(__name__)
@@ -135,8 +135,12 @@ class ChatInsightsApp:
         """Load configuration from file or create default"""
         try:
             if os.path.exists(CONFIG_FILE):
-                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                    saved_config = json.load(f)
+                try:
+                    saved_config = load_json_file(CONFIG_FILE)
+                except ExportLoadError as e:
+                    logger.warning("Ignoring invalid config file: %s", e)
+                    saved_config = {}
+                if isinstance(saved_config, dict):
                     # Update config with saved values, keeping defaults for any missing keys
                     for key, value in saved_config.items():
                         self.config[key] = value
@@ -444,14 +448,16 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
 
             # Try to auto-detect platform
             try:
-                with open(filename, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
+                data = load_json_file(filename)
                 platform = detect_platform(data)
                 if platform != "unknown":
                     self.platform_var.set(platform)
                     self.platform_info.config(text=f"Detected: {platform.upper()}")
                 else:
                     self.platform_info.config(text="Unable to auto-detect, please select manually")
+            except ExportLoadError as e:
+                self.platform_info.config(text="Invalid export file")
+                logger.warning("Cannot detect platform: %s", e)
             except Exception as e:
                 self.platform_info.config(text="Error reading file")
 
@@ -558,8 +564,15 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
                 conversations_data = itertools.chain([first_conversation], conversations_iter)
                 conversation_count = None
             else:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    conversations_data = json.load(f)
+                try:
+                    conversations_data = load_json_file(file_path)
+                except ExportLoadError as e:
+                    self.log(f"Error: {e}")
+                    messagebox.showerror("Error", str(e))
+                    self.process_btn.config(state=tk.NORMAL)
+                    self.analyze_btn.config(state=tk.NORMAL)
+                    self.update_status("Processing failed")
+                    return
                 if platform == "auto":
                     platform = detect_platform(conversations_data)
                     self.log(f"Auto-detected platform: {platform}")
@@ -570,6 +583,14 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
                 messagebox.showerror("Error", "Unable to detect export format. Please select the platform manually.")
                 self.process_btn.config(state=tk.NORMAL)
                 self.analyze_btn.config(state=tk.NORMAL)
+                return
+
+            if conversation_count is not None and conversation_count == 0:
+                self.log("Error: no conversations found in the export.")
+                messagebox.showerror("Error", "No conversations found in the export file.")
+                self.process_btn.config(state=tk.NORMAL)
+                self.analyze_btn.config(state=tk.NORMAL)
+                self.update_status("Processing failed")
                 return
 
             # Process conversations based on platform
@@ -775,8 +796,14 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
             self.log("Starting training data generation...")
 
             # Load pruned data
-            with open(pruned_file, 'r', encoding='utf-8') as f:
-                pruned_data = json.load(f)
+            try:
+                pruned_data = load_json_file(pruned_file)
+            except ExportLoadError as e:
+                self.log(f"Error loading pruned data: {e}")
+                messagebox.showerror("Error", str(e))
+                self.generate_btn.config(state=tk.NORMAL)
+                self.update_status("Training data generation failed")
+                return
 
             # Generate training data with options from UI
             min_length = self.min_length_var.get()

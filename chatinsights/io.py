@@ -6,6 +6,7 @@ to a regular json.load otherwise.
 
 import json
 import os
+import shutil
 
 STREAM_THRESHOLD = 50 * 1024 * 1024  # 50 MB
 
@@ -46,6 +47,22 @@ def use_streaming(file_path):
     """Return True if the export file is large enough to warrant streaming."""
     try:
         return os.path.getsize(file_path) > STREAM_THRESHOLD
+    except OSError:
+        return False
+
+
+def backup_file(file_path, backup_path=None):
+    """Copy an existing file to a .bak location before it is overwritten.
+
+    Returns True when a backup was made, False when the source does not exist
+    or the copy failed.
+    """
+    if not file_path or not os.path.isfile(file_path):
+        return False
+    target = backup_path or f"{file_path}.bak"
+    try:
+        shutil.copy2(file_path, target)
+        return True
     except OSError:
         return False
 

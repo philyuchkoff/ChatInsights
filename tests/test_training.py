@@ -170,9 +170,7 @@ def test_copy_conversations_to_obsidian_with_symlinks(tmp_path):
         f.write("# Model: gpt-4o\n# Title: My Chat\n\nHello world\n")
 
     obsidian_dir = os.path.join(str(tmp_path), "Obsidian", "Concepts")
-    copy_conversations_to_obsidian(
-        os.path.join(str(tmp_path), "data"), obsidian_dir, use_symlinks=True
-    )
+    copy_conversations_to_obsidian(os.path.join(str(tmp_path), "data"), obsidian_dir, use_symlinks=True)
 
     dest = os.path.join(obsidian_dir, "Conversations", "January_2025", "My_Chat_01_01_2025_10_00_00.md")
     assert os.path.islink(dest)
@@ -199,8 +197,6 @@ def test_copy_conversations_to_obsidian_symlink_replaces_old_copy(tmp_path):
     assert os.path.isfile(dest) and not os.path.islink(dest)
 
     # Second run: symlink mode replaces the existing copy
-    copy_conversations_to_obsidian(
-        os.path.join(str(tmp_path), "data"), obsidian_dir, use_symlinks=True
-    )
+    copy_conversations_to_obsidian(os.path.join(str(tmp_path), "data"), obsidian_dir, use_symlinks=True)
     assert os.path.islink(dest)
     assert os.path.realpath(dest) == os.path.realpath(src)

@@ -33,7 +33,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 from .i18n import I18n
-from .io import ExportLoadError, iter_conversations, load_json_file, use_streaming
+from .io import ExportLoadError, backup_file, iter_conversations, load_json_file, use_streaming
 from .parsers import detect_platform
 from .parsers.chatgpt import process_chatgpt_conversations
 from .parsers.claude import process_claude_conversations
@@ -159,6 +159,7 @@ class ChatInsightsApp:
         """Save current configuration to file"""
         try:
             os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+            backup_file(CONFIG_FILE)
             with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=4)
             return True

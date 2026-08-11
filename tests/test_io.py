@@ -10,6 +10,7 @@ import pytest
 from chatinsights.io import (
     STREAM_THRESHOLD,
     ExportLoadError,
+    backup_file,
     iter_conversations,
     load_json_file,
     use_streaming,
@@ -112,3 +113,46 @@ def test_load_json_file_valid(tmp_path, chatgpt_conversations):
     path = write_export(tmp_path, chatgpt_conversations)
     data = load_json_file(path)
     assert data == chatgpt_conversations
+
+
+def test_backup_file_creates_bak(tmp_path):
+    path = os.path.join(str(tmp_path), "config.json")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write('{"key": "value"}')
+
+    assert backup_file(path)
+    bak = path + ".bak"
+    assert os.path.exists(bak)
+    with open(bak, encoding="utf-8") as f:
+        assert f.read() == '{"key": "value"}'
+
+
+def test_backup_file_custom_backup_path(tmp_path):
+    path = os.path.join(str(tmp_path), "config.json")
+    backup = os.path.join(str(tmp_path), "config.bak.json")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("data")
+
+    assert backup_file(path, backup_path=backup)
+    assert os.path.exists(backup)
+
+
+def test_backup_file_missing_source(tmp_path):
+    assert not backup_file(os.path.join(str(tmp_path), "does_not_exist.json"))
+
+
+def test_backup_file_overwrites_previous_backup(tmp_path):
+    path = os.path.join(str(tmp_path), "config.json")
+    bak = path + ".bak"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("new content")
+
+    assert backup_file(path)
+    with open(bak, encoding="utf-8") as f:
+        assert f.read() == "new content"
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("newer content")
+    assert backup_file(path)
+    with open(bak, encoding="utf-8") as f:
+        assert f.read() == "newer content"

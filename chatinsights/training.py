@@ -212,10 +212,16 @@ def _md_with_frontmatter(content):
     return "\n".join(frontmatter) + "\n" + content
 
 
-def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
-    """Copy .txt conversation files to Obsidian vault as .md files (with YAML frontmatter)"""
+def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None, use_symlinks=False):
+    """Copy (or symlink) .txt conversation files to Obsidian vault as .md files.
+
+    By default files are copied with YAML frontmatter. When ``use_symlinks`` is
+    True, symbolic links are created instead to save disk space (frontmatter is
+    not added in this mode).
+    """
     if log:
-        log("Copying conversation logs to Obsidian vault...")
+        action = "Linking" if use_symlinks else "Copying"
+        log(f"{action} conversation logs to Obsidian vault...")
     source_data_dir = data_dir
     target_obsidian_convos_dir = os.path.join(obsidian_dir, "Conversations")
     os.makedirs(target_obsidian_convos_dir, exist_ok=True)
@@ -241,6 +247,17 @@ def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
                 dest_path = os.path.join(target_subdir, dest_filename)
 
                 try:
+                    if use_symlinks:
+                        # Recreate the link so stale targets are refreshed
+                        if os.path.islink(dest_path) or os.path.exists(dest_path):
+                            os.remove(dest_path)
+                        try:
+                            os.symlink(src_path, dest_path)
+                            copied_count += 1
+                            continue
+                        except OSError:
+                            # Fall back to a plain copy if symlinks are unavailable
+                            pass
                     with open(src_path, "r", encoding="utf-8") as src_file:
                         content = src_file.read()
                     with open(dest_path, "w", encoding="utf-8") as dest_file:

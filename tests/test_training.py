@@ -160,3 +160,47 @@ def test_copy_conversations_to_obsidian_with_frontmatter(tmp_path):
     assert content.startswith("---\n")
     assert 'title: "My Chat"' in content
     assert "Hello world" in content
+
+
+def test_copy_conversations_to_obsidian_with_symlinks(tmp_path):
+    month_dir = os.path.join(str(tmp_path), "data", "January_2025")
+    os.makedirs(month_dir)
+    src = os.path.join(month_dir, "My_Chat_01_01_2025_10_00_00.txt")
+    with open(src, "w", encoding="utf-8") as f:
+        f.write("# Model: gpt-4o\n# Title: My Chat\n\nHello world\n")
+
+    obsidian_dir = os.path.join(str(tmp_path), "Obsidian", "Concepts")
+    copy_conversations_to_obsidian(
+        os.path.join(str(tmp_path), "data"), obsidian_dir, use_symlinks=True
+    )
+
+    dest = os.path.join(obsidian_dir, "Conversations", "January_2025", "My_Chat_01_01_2025_10_00_00.md")
+    assert os.path.islink(dest)
+    assert os.path.realpath(dest) == os.path.realpath(src)
+    with open(dest, encoding="utf-8") as f:
+        content = f.read()
+    assert "Hello world" in content
+    # No frontmatter in symlink mode
+    assert not content.startswith("---")
+
+
+def test_copy_conversations_to_obsidian_symlink_replaces_old_copy(tmp_path):
+    month_dir = os.path.join(str(tmp_path), "data", "January_2025")
+    os.makedirs(month_dir)
+    src = os.path.join(month_dir, "My_Chat_01_01_2025_10_00_00.txt")
+    with open(src, "w", encoding="utf-8") as f:
+        f.write("Hello world\n")
+
+    obsidian_dir = os.path.join(str(tmp_path), "Obsidian", "Concepts")
+
+    # First run: plain copy
+    copy_conversations_to_obsidian(os.path.join(str(tmp_path), "data"), obsidian_dir)
+    dest = os.path.join(obsidian_dir, "Conversations", "January_2025", "My_Chat_01_01_2025_10_00_00.md")
+    assert os.path.isfile(dest) and not os.path.islink(dest)
+
+    # Second run: symlink mode replaces the existing copy
+    copy_conversations_to_obsidian(
+        os.path.join(str(tmp_path), "data"), obsidian_dir, use_symlinks=True
+    )
+    assert os.path.islink(dest)
+    assert os.path.realpath(dest) == os.path.realpath(src)

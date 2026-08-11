@@ -17,6 +17,7 @@ def _args(file_path, tmp_path, **overrides):
         "system_name": "System",
         "no_training": False,
         "no_concepts": False,
+        "symlink_conversations": False,
         "min_length": 10,
         "verbose": False,
     }
@@ -30,10 +31,11 @@ def argparse_namespace(d):
 
 def test_build_parser():
     parser = build_parser()
-    args = parser.parse_args(["export.json", "--platform", "deepseek", "--no-training"])
+    args = parser.parse_args(["export.json", "--platform", "deepseek", "--no-training", "--symlink-conversations"])
     assert args.file == "export.json"
     assert args.platform == "deepseek"
     assert args.no_training
+    assert args.symlink_conversations
 
 
 def test_run_missing_file(tmp_path):
@@ -64,6 +66,33 @@ def test_run_full_pipeline_chatgpt(chatgpt_conversations, names, tmp_path, caplo
     obsidian_dir = os.path.join(str(tmp_path), "Obsidian", "Concepts")
     assert os.path.exists(os.path.join(obsidian_dir, "Concepts-MOC.md"))
     assert os.path.exists(os.path.join(obsidian_dir, "Concept-Dashboard.md"))
+
+
+def test_run_with_symlink_conversations(chatgpt_conversations, tmp_path):
+    import json
+
+    export = os.path.join(str(tmp_path), "export.json")
+    with open(export, "w", encoding="utf-8") as f:
+        json.dump(chatgpt_conversations, f)
+
+    code = run(_args(export, tmp_path, symlink_conversations=True))
+    assert code == 0
+
+    data_dir = os.path.join(str(tmp_path), "data")
+    obsidian_convos = os.path.join(str(tmp_path), "Obsidian", "Concepts", "Conversations")
+    assert os.path.isdir(obsidian_convos)
+
+    linked = [
+        os.path.join(root, name)
+        for root, _, files in os.walk(obsidian_convos)
+        for name in files
+        if name.endswith(".md")
+    ]
+    assert linked, "Expected at least one linked conversation file"
+    for link in linked:
+        assert os.path.islink(link)
+        assert os.path.isfile(link)
+        assert os.path.realpath(link).startswith(os.path.realpath(data_dir))
 
 
 def test_run_skips_training_and_concepts(chatgpt_conversations, tmp_path):

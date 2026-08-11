@@ -48,6 +48,11 @@ def build_parser():
     parser.add_argument("--no-training", action="store_true", help="Skip training data generation")
     parser.add_argument("--no-concepts", action="store_true", help="Skip concept tracking and Obsidian generation")
     parser.add_argument(
+        "--symlink-conversations",
+        action="store_true",
+        help="Create symbolic links instead of copying conversation files into the Obsidian vault",
+    )
+    parser.add_argument(
         "--min-length", type=int, default=10, help="Minimum instruction length for training pairs (default: 10)"
     )
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
@@ -141,7 +146,7 @@ def run(args):
             len(results["concepts"]),
         )
 
-        copy_conversations_to_obsidian(data_dir, obsidian_dir, log=logger.info)
+        copy_conversations_to_obsidian(data_dir, obsidian_dir, log=logger.info, use_symlinks=args.symlink_conversations)
         logger.info("Obsidian vault ready at %s", obsidian_dir)
 
     logger.info("Done. Output directory: %s", args.output)

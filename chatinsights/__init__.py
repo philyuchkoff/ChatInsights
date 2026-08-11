@@ -16,16 +16,4 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import tkinter as tk
-
-from chatinsights.gui import ChatInsightsApp
-
-
-def main():
-    root = tk.Tk()
-    app = ChatInsightsApp(root)
-    root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
+__version__ = "3.0"

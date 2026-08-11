@@ -5,7 +5,9 @@ Unit tests for training data generation and auxiliary operations.
 import os
 
 from chatinsights.training import (
+    _md_with_frontmatter,
     cleanup_empty_untitled_files,
+    copy_conversations_to_obsidian,
     create_training_pairs,
     generate_conversation_titles,
 )
@@ -118,3 +120,43 @@ def test_cleanup_no_empty_files(tmp_path):
     result = cleanup_empty_untitled_files(str(tmp_path))
     assert result["count"] == 0
     assert result["cleanup_dir"] is None
+
+
+def test_md_with_frontmatter():
+    content = "# Model: gpt-4o\n# Title: My Chat\n# Date: 2025-01-01 10:00:00\n\nBody text\n"
+    md = _md_with_frontmatter(content)
+    assert md.startswith("---\n")
+    assert 'title: "My Chat"' in md
+    assert 'model: "gpt-4o"' in md
+    assert 'date: "2025-01-01 10:00:00"' in md
+    assert md.rstrip().endswith("Body text")
+
+
+def test_md_with_frontmatter_no_headers():
+    content = "No headers here\n"
+    assert _md_with_frontmatter(content) == content
+
+
+def test_md_with_frontmatter_escapes_title():
+    content = '# Title: Hello "World": Part 1\n# Model: claude\n\nBody\n'
+    md = _md_with_frontmatter(content)
+    assert 'title: "Hello \\"World\\": Part 1"' in md
+
+
+def test_copy_conversations_to_obsidian_with_frontmatter(tmp_path):
+    month_dir = os.path.join(str(tmp_path), "data", "January_2025")
+    os.makedirs(month_dir)
+    src = os.path.join(month_dir, "My_Chat_01_01_2025_10_00_00.txt")
+    with open(src, "w", encoding="utf-8") as f:
+        f.write("# Model: gpt-4o\n# Title: My Chat\n# Date: 2025-01-01 10:00:00\n\nHello world\n")
+
+    obsidian_dir = os.path.join(str(tmp_path), "Obsidian", "Concepts")
+    copy_conversations_to_obsidian(os.path.join(str(tmp_path), "data"), obsidian_dir)
+
+    dest = os.path.join(obsidian_dir, "Conversations", "January_2025", "My_Chat_01_01_2025_10_00_00.md")
+    assert os.path.exists(dest)
+    with open(dest, encoding="utf-8") as f:
+        content = f.read()
+    assert content.startswith("---\n")
+    assert 'title: "My Chat"' in content
+    assert "Hello world" in content

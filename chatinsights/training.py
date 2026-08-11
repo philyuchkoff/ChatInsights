@@ -183,8 +183,37 @@ def cleanup_empty_untitled_files(data_dir, log=None):
         return {"count": 0, "cleanup_dir": None, "log_file": None}
 
 
+def _extract_headers(content):
+    """Extract # Model / # Title / # Date headers from a conversation file."""
+    headers = {}
+    for line in content.splitlines()[:10]:
+        if line.startswith("# Model:"):
+            headers["model"] = line.split(":", 1)[1].strip()
+        elif line.startswith("# Title:"):
+            headers["title"] = line.split(":", 1)[1].strip()
+        elif line.startswith("# Date:"):
+            headers["date"] = line.split(":", 1)[1].strip()
+    return headers
+
+
+def _md_with_frontmatter(content):
+    """Prepend YAML frontmatter (from file headers) to a conversation file."""
+    headers = _extract_headers(content)
+    if not headers:
+        return content
+
+    frontmatter = ["---"]
+    for key in ("title", "date", "model"):
+        if key in headers:
+            frontmatter.append(f"{key}: {json.dumps(headers[key], ensure_ascii=False)}")
+    frontmatter.append("---")
+    frontmatter.append("")
+
+    return "\n".join(frontmatter) + "\n" + content
+
+
 def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
-    """Copy .txt conversation files to Obsidian vault as .md files"""
+    """Copy .txt conversation files to Obsidian vault as .md files (with YAML frontmatter)"""
     if log:
         log("Copying conversation logs to Obsidian vault...")
     source_data_dir = data_dir
@@ -201,7 +230,7 @@ def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
             if file.endswith(".txt") and file not in ["conversation_titles.txt", "training_data.txt"]:
                 # Skip empty untitled files
                 src_path = os.path.join(root, file)
-                if "untitled" in file.lower() and os.path.getsize(src_path) == 0:
+                if 'untitled' in file.lower() and os.path.getsize(src_path) == 0:
                     continue
 
                 relative_path = os.path.relpath(root, source_data_dir)
@@ -212,7 +241,10 @@ def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
                 dest_path = os.path.join(target_subdir, dest_filename)
 
                 try:
-                    shutil.copy2(src_path, dest_path)
+                    with open(src_path, 'r', encoding='utf-8') as src_file:
+                        content = src_file.read()
+                    with open(dest_path, 'w', encoding='utf-8') as dest_file:
+                        dest_file.write(_md_with_frontmatter(content))
                     copied_count += 1
                 except Exception as e:
                     if log:

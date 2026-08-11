@@ -108,10 +108,9 @@ def process_deepseek_conversations(conversations_data, data_dir, names=None, log
         else:
             conversations_data = [conversations_data]
 
-    if log:
-        log(f"Debug - Processing {len(conversations_data)} Deepseek conversations")
-
+    processed_count = 0
     for idx, conversation in enumerate(conversations_data):
+        processed_count += 1
         if idx == 0 and log:
             log(f"Debug - First conversation keys: {list(conversation.keys())}")
 
@@ -196,7 +195,7 @@ def process_deepseek_conversations(conversations_data, data_dir, names=None, log
                 log(f"Debug - Conversation '{title}' has no messages")
 
     if log:
-        log(f"Debug - Created {len(created_directories_info)} files with messages")
+        log(f"Debug - Processed {processed_count} Deepseek conversations, created {len(created_directories_info)} files with messages")
 
     pruned_json_path = os.path.join(data_dir, "pruned.json")
     with open(pruned_json_path, 'w', encoding='utf-8') as json_file:

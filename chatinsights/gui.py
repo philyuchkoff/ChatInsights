@@ -22,6 +22,7 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5):
 Original application structure by Eden_Eldith(P.C O'Brien).
 """
 
+import itertools
 import json
 import os
 import re
@@ -30,6 +31,7 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
+from .io import iter_conversations, use_streaming
 from .parsers import detect_platform
 from .parsers.chatgpt import process_chatgpt_conversations
 from .parsers.claude import process_claude_conversations
@@ -534,15 +536,34 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
             data_dir = os.path.join(output_dir, "data")
             os.makedirs(data_dir, exist_ok=True)
 
-            # Load the export
-            with open(file_path, 'r', encoding='utf-8') as f:
-                conversations_data = json.load(f)
-
             # Detect platform
             platform = self.platform_var.get()
-            if platform == "auto":
-                platform = detect_platform(conversations_data)
-                self.log(f"Auto-detected platform: {platform}")
+
+            # Load the export (streaming for large files)
+            if use_streaming(file_path):
+                self.log(f"Large export detected, using streaming mode...")
+                try:
+                    conversations_iter = iter_conversations(file_path)
+                    first_conversation = next(conversations_iter)
+                except StopIteration:
+                    self.log("Error: export file is empty.")
+                    messagebox.showerror("Error", "The export file is empty.")
+                    self.process_btn.config(state=tk.NORMAL)
+                    self.analyze_btn.config(state=tk.NORMAL)
+                    self.update_status("Processing failed")
+                    return
+                if platform == "auto":
+                    platform = detect_platform([first_conversation])
+                    self.log(f"Auto-detected platform: {platform}")
+                conversations_data = itertools.chain([first_conversation], conversations_iter)
+                conversation_count = None
+            else:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    conversations_data = json.load(f)
+                if platform == "auto":
+                    platform = detect_platform(conversations_data)
+                    self.log(f"Auto-detected platform: {platform}")
+                conversation_count = len(conversations_data) if isinstance(conversations_data, list) else None
 
             if platform == "unknown":
                 self.log("Unable to detect platform. Please select manually.")
@@ -552,7 +573,10 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
                 return
 
             # Process conversations based on platform
-            self.log(f"Processing {platform.upper()} export with {len(conversations_data) if isinstance(conversations_data, list) else 'unknown number of'} conversations...")
+            if conversation_count is None:
+                self.log(f"Processing {platform.upper()} export (streaming)...")
+            else:
+                self.log(f"Processing {platform.upper()} export with {conversation_count} conversations...")
 
             names = self._names()
             if platform == "chatgpt":

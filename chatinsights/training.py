@@ -230,7 +230,7 @@ def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
             if file.endswith(".txt") and file not in ["conversation_titles.txt", "training_data.txt"]:
                 # Skip empty untitled files
                 src_path = os.path.join(root, file)
-                if 'untitled' in file.lower() and os.path.getsize(src_path) == 0:
+                if "untitled" in file.lower() and os.path.getsize(src_path) == 0:
                     continue
 
                 relative_path = os.path.relpath(root, source_data_dir)
@@ -241,9 +241,9 @@ def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
                 dest_path = os.path.join(target_subdir, dest_filename)
 
                 try:
-                    with open(src_path, 'r', encoding='utf-8') as src_file:
+                    with open(src_path, "r", encoding="utf-8") as src_file:
                         content = src_file.read()
-                    with open(dest_path, 'w', encoding='utf-8') as dest_file:
+                    with open(dest_path, "w", encoding="utf-8") as dest_file:
                         dest_file.write(_md_with_frontmatter(content))
                     copied_count += 1
                 except Exception as e:

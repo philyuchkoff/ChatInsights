@@ -24,6 +24,7 @@ Original application structure by Eden_Eldith(P.C O'Brien).
 
 import itertools
 import json
+import logging
 import os
 import re
 import sys
@@ -33,6 +34,8 @@ from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 from .io import iter_conversations, use_streaming
 from .parsers import detect_platform
+
+logger = logging.getLogger(__name__)
 from .parsers.chatgpt import process_chatgpt_conversations
 from .parsers.claude import process_claude_conversations
 from .parsers.deepseek import process_deepseek_conversations
@@ -130,7 +133,7 @@ class ChatInsightsApp:
             # Ensure output directory exists
             os.makedirs(self.config["output_dir"], exist_ok=True)
         except Exception as e:
-            print(f"Error loading config: {e}")
+            logger.error("Error loading config: %s", e)
 
     def save_config(self):
         """Save current configuration to file"""
@@ -886,6 +889,16 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
 
 def main():
     """Launch the ChatInsights GUI application."""
+    configure_logging()
     root = tk.Tk()
     app = ChatInsightsApp(root)
     root.mainloop()
+
+
+def configure_logging():
+    """Set up module-level logging (level can be raised via CHATINSIGHTS_LOG_LEVEL)."""
+    level = os.environ.get("CHATINSIGHTS_LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=getattr(logging, level, logging.INFO),
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )

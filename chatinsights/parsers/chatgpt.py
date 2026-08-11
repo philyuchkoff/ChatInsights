@@ -72,17 +72,17 @@ def process_chatgpt_conversations(conversations_data, data_dir, names=None, log=
     pruned_data = {}
 
     for conversation in conversations_data:
-        updated = conversation.get('update_time')
+        updated = conversation.get("update_time")
         if not updated:
             continue
 
         updated_date = datetime.fromtimestamp(updated)
-        directory_name = updated_date.strftime('%B_%Y')
+        directory_name = updated_date.strftime("%B_%Y")
         directory_path = os.path.join(data_dir, directory_name)
 
         os.makedirs(directory_path, exist_ok=True)
 
-        title = conversation.get('title', 'Untitled')
+        title = conversation.get("title", "Untitled")
 
         # NEW: Extract model_slug from conversation
         model_slug = get_chatgpt_model_slug(conversation)
@@ -98,7 +98,7 @@ def process_chatgpt_conversations(conversations_data, data_dir, names=None, log=
 
         messages = get_chatgpt_messages(conversation, names)
 
-        with open(file_name, 'w', encoding="utf-8") as file:
+        with open(file_name, "w", encoding="utf-8") as file:
             # NEW: Write model header at the top
             file.write(f"# Model: {model_slug}\n")
             file.write(f"# Title: {title}\n")
@@ -112,21 +112,20 @@ def process_chatgpt_conversations(conversations_data, data_dir, names=None, log=
         if directory_name not in pruned_data:
             pruned_data[directory_name] = []
 
-        pruned_data[directory_name].append({
-            "title": title,
-            "create_time": datetime.fromtimestamp(conversation.get('create_time')).strftime('%Y-%m-%d %H:%M:%S'),
-            "update_time": updated_date.strftime('%Y-%m-%d %H:%M:%S'),
-            "model": model_slug,
-            "messages": messages
-        })
+        pruned_data[directory_name].append(
+            {
+                "title": title,
+                "create_time": datetime.fromtimestamp(conversation.get("create_time")).strftime("%Y-%m-%d %H:%M:%S"),
+                "update_time": updated_date.strftime("%Y-%m-%d %H:%M:%S"),
+                "model": model_slug,
+                "messages": messages,
+            }
+        )
 
-        created_directories_info.append({
-            "directory": directory_path,
-            "file": file_name
-        })
+        created_directories_info.append({"directory": directory_path, "file": file_name})
 
     pruned_json_path = os.path.join(data_dir, "pruned.json")
-    with open(pruned_json_path, 'w', encoding='utf-8') as json_file:
+    with open(pruned_json_path, "w", encoding="utf-8") as json_file:
         json.dump(pruned_data, json_file, ensure_ascii=False, indent=4)
 
     return created_directories_info, pruned_data

@@ -34,8 +34,6 @@ from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 from .io import ExportLoadError, iter_conversations, load_json_file, use_streaming
 from .parsers import detect_platform
-
-logger = logging.getLogger(__name__)
 from .parsers.chatgpt import process_chatgpt_conversations
 from .parsers.claude import process_claude_conversations
 from .parsers.deepseek import process_deepseek_conversations
@@ -46,6 +44,8 @@ from .training import (
     create_training_pairs,
     generate_conversation_titles,
 )
+
+logger = logging.getLogger(__name__)
 
 # Global variables
 OUTPUT_DIR = os.path.join(os.path.expanduser("~"), "ChatInsights")
@@ -68,10 +68,10 @@ class ChatInsightsApp:
             "last_import_file": "",
             "themes": {
                 "dark": {"bg": "#2e2e2e", "fg": "#ffffff", "button": "#3d3d3d", "highlight": "#4a86e8"},
-                "light": {"bg": "#f0f0f0", "fg": "#333333", "button": "#e0e0e0", "highlight": "#4a86e8"}
+                "light": {"bg": "#f0f0f0", "fg": "#333333", "button": "#e0e0e0", "highlight": "#4a86e8"},
             },
             "current_theme": "light",
-            "last_platform": "auto"  # auto, chatgpt, claude
+            "last_platform": "auto",  # auto, chatgpt, claude
         }
         self.load_config()
 
@@ -124,7 +124,7 @@ class ChatInsightsApp:
         """Load default concept tracking list from the bundled resource file."""
         resource = os.path.join(os.path.dirname(__file__), "default_concepts.txt")
         try:
-            with open(resource, 'r', encoding='utf-8') as f:
+            with open(resource, "r", encoding="utf-8") as f:
                 content = f.read()
             return content.strip()
         except OSError as e:
@@ -154,7 +154,7 @@ class ChatInsightsApp:
         """Save current configuration to file"""
         try:
             os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
-            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=4)
             return True
         except Exception as e:
@@ -186,10 +186,18 @@ class ChatInsightsApp:
 
         self.platform_var = tk.StringVar(value=self.config.get("last_platform", "auto"))
 
-        ttk.Radiobutton(platform_frame, text="Auto-detect", variable=self.platform_var, value="auto").pack(side=tk.LEFT, padx=10, pady=5)
-        ttk.Radiobutton(platform_frame, text="ChatGPT", variable=self.platform_var, value="chatgpt").pack(side=tk.LEFT, padx=10, pady=5)
-        ttk.Radiobutton(platform_frame, text="Claude", variable=self.platform_var, value="claude").pack(side=tk.LEFT, padx=10, pady=5)
-        ttk.Radiobutton(platform_frame, text="Deepseek", variable=self.platform_var, value="deepseek").pack(side=tk.LEFT, padx=10, pady=5)
+        ttk.Radiobutton(platform_frame, text="Auto-detect", variable=self.platform_var, value="auto").pack(
+            side=tk.LEFT, padx=10, pady=5
+        )
+        ttk.Radiobutton(platform_frame, text="ChatGPT", variable=self.platform_var, value="chatgpt").pack(
+            side=tk.LEFT, padx=10, pady=5
+        )
+        ttk.Radiobutton(platform_frame, text="Claude", variable=self.platform_var, value="claude").pack(
+            side=tk.LEFT, padx=10, pady=5
+        )
+        ttk.Radiobutton(platform_frame, text="Deepseek", variable=self.platform_var, value="deepseek").pack(
+            side=tk.LEFT, padx=10, pady=5
+        )
 
         # Platform info label
         self.platform_info = ttk.Label(platform_frame, text="", foreground="blue")
@@ -238,7 +246,9 @@ class ChatInsightsApp:
         self.process_btn = ttk.Button(buttons_frame, text="Process AI Export", command=self.process_export)
         self.process_btn.pack(side=tk.LEFT, padx=5)
 
-        self.analyze_btn = ttk.Button(buttons_frame, text="Process & Analyze Concepts", command=self.process_and_analyze)
+        self.analyze_btn = ttk.Button(
+            buttons_frame, text="Process & Analyze Concepts", command=self.process_and_analyze
+        )
         self.analyze_btn.pack(side=tk.LEFT, padx=5)
 
         # Log output
@@ -347,7 +357,9 @@ You can use this data to:
         ttk.Label(min_len_frame, text="Minimum instruction length (characters):").pack(side=tk.LEFT, padx=5)
 
         self.min_length_var = tk.IntVar(value=10)
-        ttk.Spinbox(min_len_frame, from_=1, to=100, textvariable=self.min_length_var, width=5).pack(side=tk.LEFT, padx=5)
+        ttk.Spinbox(min_len_frame, from_=1, to=100, textvariable=self.min_length_var, width=5).pack(
+            side=tk.LEFT, padx=5
+        )
 
         # Format selection
         format_frame = ttk.Frame(options_frame)
@@ -356,14 +368,18 @@ You can use this data to:
         ttk.Label(format_frame, text="Export format:").pack(side=tk.LEFT, padx=5)
 
         self.format_var = tk.StringVar(value="jsonl")
-        ttk.Radiobutton(format_frame, text="JSONL (for fine-tuning)", variable=self.format_var, value="jsonl").pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(format_frame, text="JSONL (for fine-tuning)", variable=self.format_var, value="jsonl").pack(
+            side=tk.LEFT, padx=5
+        )
         ttk.Radiobutton(format_frame, text="CSV", variable=self.format_var, value="csv").pack(side=tk.LEFT, padx=5)
 
         # Action buttons
         buttons_frame = ttk.Frame(frame)
         buttons_frame.pack(fill=tk.X, pady=10)
 
-        self.generate_btn = ttk.Button(buttons_frame, text="Generate Training Data", command=self.generate_training_data)
+        self.generate_btn = ttk.Button(
+            buttons_frame, text="Generate Training Data", command=self.generate_training_data
+        )
         self.generate_btn.pack(side=tk.LEFT, padx=5)
 
         # Preview frame
@@ -383,8 +399,12 @@ You can use this data to:
         theme_frame.pack(fill=tk.X, pady=10)
 
         self.theme_var = tk.StringVar(value=self.config["current_theme"])
-        ttk.Radiobutton(theme_frame, text="Light", variable=self.theme_var, value="light", command=self.apply_theme).pack(side=tk.LEFT, padx=20, pady=10)
-        ttk.Radiobutton(theme_frame, text="Dark", variable=self.theme_var, value="dark", command=self.apply_theme).pack(side=tk.LEFT, padx=20, pady=10)
+        ttk.Radiobutton(
+            theme_frame, text="Light", variable=self.theme_var, value="light", command=self.apply_theme
+        ).pack(side=tk.LEFT, padx=20, pady=10)
+        ttk.Radiobutton(theme_frame, text="Dark", variable=self.theme_var, value="dark", command=self.apply_theme).pack(
+            side=tk.LEFT, padx=20, pady=10
+        )
 
         # Default path settings
         path_frame = ttk.LabelFrame(frame, text="Default Paths")
@@ -393,9 +413,13 @@ You can use this data to:
         ttk.Label(path_frame, text="Default Output Folder:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 
         default_output_var = tk.StringVar(value=self.config["output_dir"])
-        ttk.Entry(path_frame, textvariable=default_output_var, width=50).grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
+        ttk.Entry(path_frame, textvariable=default_output_var, width=50).grid(
+            row=0, column=1, padx=5, pady=5, sticky=tk.W
+        )
 
-        ttk.Button(path_frame, text="Browse", command=lambda: self.browse_dir(default_output_var)).grid(row=0, column=2, padx=5, pady=5)
+        ttk.Button(path_frame, text="Browse", command=lambda: self.browse_dir(default_output_var)).grid(
+            row=0, column=2, padx=5, pady=5
+        )
 
         # Action buttons
         buttons_frame = ttk.Frame(frame)
@@ -439,7 +463,7 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
         """Open file dialog to select conversations.json"""
         filename = filedialog.askopenfilename(
             title="Select AI Export File (ChatGPT or Claude)",
-            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
+            filetypes=(("JSON files", "*.json"), ("All files", "*.*")),
         )
         if filename:
             self.file_path_var.set(filename)
@@ -458,7 +482,7 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
             except ExportLoadError as e:
                 self.platform_info.config(text="Invalid export file")
                 logger.warning("Cannot detect platform: %s", e)
-            except Exception as e:
+            except Exception:
                 self.platform_info.config(text="Error reading file")
 
     def browse_output_dir(self):
@@ -547,7 +571,7 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
 
             # Load the export (streaming for large files)
             if use_streaming(file_path):
-                self.log(f"Large export detected, using streaming mode...")
+                self.log("Large export detected, using streaming mode...")
                 try:
                     conversations_iter = iter_conversations(file_path)
                     first_conversation = next(conversations_iter)
@@ -601,29 +625,32 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
 
             names = self._names()
             if platform == "chatgpt":
-                created_dirs, pruned_data = process_chatgpt_conversations(conversations_data, data_dir, names, log=self.log)
+                created_dirs, pruned_data = process_chatgpt_conversations(
+                    conversations_data, data_dir, names, log=self.log
+                )
             elif platform == "deepseek":
-                created_dirs, pruned_data = process_deepseek_conversations(conversations_data, data_dir, names, log=self.log)
+                created_dirs, pruned_data = process_deepseek_conversations(
+                    conversations_data, data_dir, names, log=self.log
+                )
             else:  # claude
-                created_dirs, pruned_data = process_claude_conversations(conversations_data, data_dir, names, log=self.log)
+                created_dirs, pruned_data = process_claude_conversations(
+                    conversations_data, data_dir, names, log=self.log
+                )
                 # Cleanup empty untitled files
                 self.log("\nChecking for empty untitled files...")
                 cleanup_results = cleanup_empty_untitled_files(data_dir, log=self.log)
-                if cleanup_results['count'] > 0:
+                if cleanup_results["count"] > 0:
                     self.log(f"Cleanup completed: {cleanup_results['count']} empty untitled files moved")
 
             # Create training pairs
             self.log("Generating training data pairs...")
             training_pairs = create_training_pairs(
-                pruned_data,
-                os.path.join(data_dir, "training_data.jsonl"),
-                names,
-                log=self.log
+                pruned_data, os.path.join(data_dir, "training_data.jsonl"), names, log=self.log
             )
 
             # Generate conversation titles file for concept tracker
             self.log("Generating conversation titles file for concept tracker...")
-            titles_file = generate_conversation_titles(data_dir, log=self.log)
+            generate_conversation_titles(data_dir, log=self.log)
 
             self.log("Processing complete!")
             self.log(f"Processed {len(created_dirs)} conversations")
@@ -631,8 +658,10 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
             self.log(f"Generated {len(training_pairs)} training data pairs")
 
             # Update result
-            self.result_text.config(text=f"Successfully processed {len(created_dirs)} {platform.upper()} conversations. " +
-                                      f"Generated {len(training_pairs)} training pairs and prepared data for concept tracking.")
+            self.result_text.config(
+                text=f"Successfully processed {len(created_dirs)} {platform.upper()} conversations. "
+                + f"Generated {len(training_pairs)} training pairs and prepared data for concept tracking."
+            )
 
             # Enable buttons
             self.open_output_btn.config(state=tk.NORMAL)
@@ -670,33 +699,33 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
     def parse_concept_regex(self, content):
         """Parse the Concept-regex.md format into concept patterns"""
         concepts = {}
-        lines = content.strip().split('\n')
+        lines = content.strip().split("\n")
 
         for line in lines:
             line = line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
 
-            if ':' in line:
-                concept_name, patterns = line.split(':', 1)
+            if ":" in line:
+                concept_name, patterns = line.split(":", 1)
                 concept_name = concept_name.strip()
                 pattern_text = patterns.strip()
 
                 # Clean up the pattern - add word boundaries and handle pipes
                 pattern_parts = []
-                for part in pattern_text.split('|'):
+                for part in pattern_text.split("|"):
                     part = part.strip()
-                    if part and not part.startswith('\\b') and not part.endswith('\\b'):
+                    if part and not part.startswith("\\b") and not part.endswith("\\b"):
                         # Add word boundaries for standalone terms
-                        if ' ' not in part:  # Single word
-                            part = f'\\b{part}\\b'
+                        if " " not in part:  # Single word
+                            part = f"\\b{part}\\b"
                         else:  # Multi-word phrase
-                            part = part.replace(' ', '\\s+')
+                            part = part.replace(" ", "\\s+")
                     pattern_parts.append(part)
 
                 if pattern_parts:
                     try:
-                        final_pattern = '|'.join(pattern_parts)
+                        final_pattern = "|".join(pattern_parts)
                         concepts[concept_name] = re.compile(final_pattern, re.I)
                     except re.error as e:
                         self.log(f"Invalid regex for {concept_name}: {e}")
@@ -746,12 +775,12 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
             self.stats_text.insert(tk.END, f"Orphaned conversations: {results['orphaned']}\n\n")
             self.stats_text.insert(tk.END, "Concept mentions:\n")
 
-            for concept, count in sorted(results['concepts'].items(), key=lambda x: x[1], reverse=True):
+            for concept, count in sorted(results["concepts"].items(), key=lambda x: x[1], reverse=True):
                 if count > 0:
                     self.stats_text.insert(tk.END, f"- {concept}: {count} mentions\n")
 
             self.stats_text.insert(tk.END, "\nAdditional terms found:\n")
-            for term, count in sorted(results['additional_terms'].items(), key=lambda x: x[1], reverse=True)[:15]:
+            for term, count in sorted(results["additional_terms"].items(), key=lambda x: x[1], reverse=True)[:15]:
                 self.stats_text.insert(tk.END, f"- {term}: {count} occurrences\n")
 
             self.log("Concept tracking complete!")
@@ -811,11 +840,7 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
 
             output_file = os.path.join(self.config["output_dir"], f"training_data.{format_type}")
             training_pairs = create_training_pairs(
-                pruned_data,
-                output_file,
-                self._names(),
-                min_length=min_length,
-                log=self.log
+                pruned_data, output_file, self._names(), min_length=min_length, log=self.log
             )
 
             # Show preview
@@ -860,9 +885,9 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
 
     def open_folder(self, path):
         """Open a folder in the default file explorer"""
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             os.startfile(path)
-        elif sys.platform == 'darwin':  # macOS
+        elif sys.platform == "darwin":  # macOS
             os.system(f'open "{path}"')
         else:  # Linux
             os.system(f'xdg-open "{path}"')
@@ -895,10 +920,10 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
                 "last_import_file": "",
                 "themes": {
                     "dark": {"bg": "#2e2e2e", "fg": "#ffffff", "button": "#3d3d3d", "highlight": "#4a86e8"},
-                    "light": {"bg": "#f0f0f0", "fg": "#333333", "button": "#e0e0e0", "highlight": "#4a86e8"}
+                    "light": {"bg": "#f0f0f0", "fg": "#333333", "button": "#e0e0e0", "highlight": "#4a86e8"},
                 },
                 "current_theme": "light",
-                "last_platform": "auto"
+                "last_platform": "auto",
             }
 
             self.output_dir_var.set(self.config["output_dir"])
@@ -915,7 +940,7 @@ def main():
     """Launch the ChatInsights GUI application."""
     configure_logging()
     root = tk.Tk()
-    app = ChatInsightsApp(root)
+    ChatInsightsApp(root)
     root.mainloop()
 
 

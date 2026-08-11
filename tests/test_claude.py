@@ -21,10 +21,9 @@ def test_get_messages_wrapped_dict(claude_conversations, names):
 
 
 def test_get_messages_dict_chat_messages(names):
-    conversation = {"chat_messages": {
-        "0": {"sender": "human", "text": "hello"},
-        "1": {"sender": "assistant", "text": "world"}
-    }}
+    conversation = {
+        "chat_messages": {"0": {"sender": "human", "text": "hello"}, "1": {"sender": "assistant", "text": "world"}}
+    }
     messages = get_claude_messages(conversation, names)
     assert messages == [
         {"author": names["user"], "text": "hello"},

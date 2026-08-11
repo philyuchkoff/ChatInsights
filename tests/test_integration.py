@@ -32,9 +32,7 @@ def run_pipeline(conversations, processor, platform, names, tmp_path):
     created, pruned = processor(conversations, data_dir, names)
     assert len(created) > 0
 
-    training_pairs = create_training_pairs(
-        pruned, os.path.join(data_dir, "training_data.jsonl"), names
-    )
+    training_pairs = create_training_pairs(pruned, os.path.join(data_dir, "training_data.jsonl"), names)
     titles_file = generate_conversation_titles(data_dir)
 
     # Obsidian vault
@@ -59,10 +57,7 @@ def run_pipeline(conversations, processor, platform, names, tmp_path):
     conversations_dir = os.path.join(obsidian_dir, "Conversations")
     assert os.path.isdir(conversations_dir)
     md_files = [
-        os.path.join(root, f)
-        for root, _, files in os.walk(conversations_dir)
-        for f in files
-        if f.endswith(".md")
+        os.path.join(root, f) for root, _, files in os.walk(conversations_dir) for f in files if f.endswith(".md")
     ]
     assert len(md_files) == len(created)
 
@@ -81,9 +76,7 @@ def test_full_pipeline_chatgpt(chatgpt_conversations, names, tmp_path):
 
 
 def test_full_pipeline_claude(claude_conversations, names, tmp_path):
-    created, pruned, pairs = run_pipeline(
-        claude_conversations, process_claude_conversations, "claude", names, tmp_path
-    )
+    created, pruned, pairs = run_pipeline(claude_conversations, process_claude_conversations, "claude", names, tmp_path)
     with open(created[0]["file"], encoding="utf-8") as f:
         content = f.read()
     assert "## Conversation Summary" in content

@@ -31,7 +31,7 @@ def load_json_file(file_path):
         raise ExportLoadError("The file is empty (0 bytes).")
 
     try:
-        with open(file_path, 'r', encoding='utf-8-sig') as f:
+        with open(file_path, "r", encoding="utf-8-sig") as f:
             return json.load(f)
     except json.JSONDecodeError as e:
         raise ExportLoadError(
@@ -39,9 +39,7 @@ def load_json_file(file_path):
             f"column {e.colno}: {e.msg}. Make sure it is a valid export file."
         ) from e
     except UnicodeDecodeError as e:
-        raise ExportLoadError(
-            f"The file is not valid UTF-8 text ({e}). Exports must be JSON files."
-        ) from e
+        raise ExportLoadError(f"The file is not valid UTF-8 text ({e}). Exports must be JSON files.") from e
 
 
 def use_streaming(file_path):
@@ -64,13 +62,13 @@ def iter_conversations(file_path):
         yield from _iter_with_json_load(file_path)
         return
 
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         structure = _detect_top_level(f)
         f.seek(0)
-        if structure == 'array':
-            yield from ijson.items(f, 'item')
-        elif structure == 'conversations':
-            yield from ijson.items(f, 'conversations.item')
+        if structure == "array":
+            yield from ijson.items(f, "item")
+        elif structure == "conversations":
+            yield from ijson.items(f, "conversations.item")
         else:
             # Unknown structure: fall back to full load
             yield from _iter_with_json_load(file_path)
@@ -82,24 +80,24 @@ def _detect_top_level(f):
 
     events = iter(ijson.parse(f))
     for event, value, _ in events:
-        if event == 'start_array':
-            return 'array'
-        if event == 'start_map':
+        if event == "start_array":
+            return "array"
+        if event == "start_map":
             # Look for a 'conversations' key before the first nested value
             for e2, v2 in events:
-                if e2 == 'map_key' and v2 == 'conversations':
-                    return 'conversations'
-                if e2 in ('start_array', 'start_map'):
+                if e2 == "map_key" and v2 == "conversations":
+                    return "conversations"
+                if e2 in ("start_array", "start_map"):
                     return None
             return None
     return None
 
 
 def _iter_with_json_load(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    if isinstance(data, dict) and 'conversations' in data:
-        data = data['conversations']
+    if isinstance(data, dict) and "conversations" in data:
+        data = data["conversations"]
     if isinstance(data, list):
         yield from data
     else:

@@ -2,8 +2,6 @@
 Unit tests for platform detection.
 """
 
-import pytest
-
 from chatinsights.parsers import detect_platform
 
 
@@ -41,10 +39,7 @@ def test_detect_claude_by_uuid():
 
 def test_detect_deepseek_vs_chatgpt_priority():
     """Mapping with fragments must be detected as Deepseek even without conversation_id."""
-    data = [{
-        "conversation_id": "x",
-        "mapping": {
-            "1": {"message": {"fragments": [{"type": "REQUEST", "content": "hi"}]}}
-        }
-    }]
+    data = [
+        {"conversation_id": "x", "mapping": {"1": {"message": {"fragments": [{"type": "REQUEST", "content": "hi"}]}}}}
+    ]
     assert detect_platform(data) == "deepseek"

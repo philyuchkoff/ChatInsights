@@ -55,13 +55,15 @@ def test_create_training_pairs_min_length(names, tmp_path):
 def test_create_training_pairs_custom_names(tmp_path):
     custom = {"user": "Me", "assistant": "Bot", "system": "Sys"}
     pruned = {
-        "January_2025": [{
-            "title": "Test",
-            "messages": [
-                {"author": "Me", "text": "A long enough instruction for the model here"},
-                {"author": "Bot", "text": "Response"},
-            ],
-        }]
+        "January_2025": [
+            {
+                "title": "Test",
+                "messages": [
+                    {"author": "Me", "text": "A long enough instruction for the model here"},
+                    {"author": "Bot", "text": "Response"},
+                ],
+            }
+        ]
     }
     out = os.path.join(str(tmp_path), "training.jsonl")
     pairs = create_training_pairs(pruned, out, custom)

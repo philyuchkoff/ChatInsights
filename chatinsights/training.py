@@ -23,28 +23,25 @@ def create_training_pairs(pruned_data, output_file, names=None, min_length=10, l
             # Process message pairs (User -> Assistant)
             for i in range(len(messages) - 1):
                 # Find User->Assistant pairs
-                if messages[i]["author"] == names["user"] and messages[i+1]["author"] == names["assistant"]:
+                if messages[i]["author"] == names["user"] and messages[i + 1]["author"] == names["assistant"]:
                     # Skip very short instructions
                     if len(messages[i]["text"]) < min_length:
                         continue
 
                     # Create a training pair
-                    pair = {
-                        "instruction": messages[i]["text"],
-                        "response": messages[i+1]["text"]
-                    }
+                    pair = {"instruction": messages[i]["text"], "response": messages[i + 1]["text"]}
                     training_pairs.append(pair)
 
     # Write to the appropriate format
-    if output_file.endswith('.jsonl'):
+    if output_file.endswith(".jsonl"):
         # Write to JSONL format (one JSON object per line)
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             for pair in training_pairs:
-                f.write(json.dumps(pair, ensure_ascii=False) + '\n')
+                f.write(json.dumps(pair, ensure_ascii=False) + "\n")
 
-    elif output_file.endswith('.csv'):
+    elif output_file.endswith(".csv"):
         # Write to CSV format
-        with open(output_file, 'w', encoding='utf-8', newline='') as f:
+        with open(output_file, "w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["instruction", "response"])
             for pair in training_pairs:
@@ -60,7 +57,7 @@ def generate_conversation_titles(data_dir, log=None):
     titles_file = os.path.join(data_dir, "conversation_titles.txt")
 
     # Add header for Obsidian
-    with open(titles_file, 'w', encoding='utf-8') as f:
+    with open(titles_file, "w", encoding="utf-8") as f:
         f.write("---\n")
         f.write("tags:\n")
         f.write("  - help\n")
@@ -73,14 +70,14 @@ def generate_conversation_titles(data_dir, log=None):
     all_files = []
     for root, _, files in os.walk(data_dir):
         for file in files:
-            if file.endswith('.txt') and file != 'conversation_titles.txt' and file != 'training_data.txt':
+            if file.endswith(".txt") and file != "conversation_titles.txt" and file != "training_data.txt":
                 all_files.append(os.path.join(root, file))
 
     # Sort files by date (extracted from filename)
     # Fixed sorting function to handle edge cases
     def get_sort_key(filepath):
         filename = os.path.basename(filepath)
-        parts = filename.split('_')
+        parts = filename.split("_")
 
         # Try to extract date components from the end of the filename
         # Expected format: ..._DD_MM_YYYY_HH_MM_SS.txt
@@ -89,7 +86,7 @@ def generate_conversation_titles(data_dir, log=None):
                 # Get the last 6 parts before .txt
                 date_parts = parts[-6:]
                 # Remove .txt from the last part
-                date_parts[-1] = date_parts[-1].replace('.txt', '')
+                date_parts[-1] = date_parts[-1].replace(".txt", "")
 
                 # Convert to a sortable format: YYYY_MM_DD_HH_MM_SS
                 year = date_parts[2]
@@ -110,7 +107,7 @@ def generate_conversation_titles(data_dir, log=None):
     all_files.sort(key=get_sort_key)
 
     # Write file list to conversation_titles.txt
-    with open(titles_file, 'a', encoding='utf-8') as f:
+    with open(titles_file, "a", encoding="utf-8") as f:
         for i, file_path in enumerate(all_files, 1):
             # Just write the filename without the full path for readability
             filename = os.path.basename(file_path)
@@ -134,11 +131,11 @@ def cleanup_empty_untitled_files(data_dir, log=None):
             continue
 
         for file in files:
-            if file.endswith('.txt'):
+            if file.endswith(".txt"):
                 file_path = os.path.join(root, file)
 
                 # Check if file contains "untitled" (case insensitive) and is 0KB
-                if 'untitled' in file.lower():
+                if "untitled" in file.lower():
                     file_size = os.path.getsize(file_path)
                     if file_size == 0:
                         empty_untitled_files.append(file_path)
@@ -153,8 +150,8 @@ def cleanup_empty_untitled_files(data_dir, log=None):
         # Create a log file for the cleanup
         cleanup_log_path = os.path.join(cleanup_dir, f"cleanup_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
 
-        with open(cleanup_log_path, 'w', encoding='utf-8') as log_file:
-            log_file.write(f"Empty Untitled Files Cleanup Log\n")
+        with open(cleanup_log_path, "w", encoding="utf-8") as log_file:
+            log_file.write("Empty Untitled Files Cleanup Log\n")
             log_file.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             log_file.write(f"Found {len(empty_untitled_files)} empty untitled files\n\n")
 
@@ -179,19 +176,11 @@ def cleanup_empty_untitled_files(data_dir, log=None):
             log(f"Cleanup log saved to: {cleanup_log_path}")
 
         # Return statistics
-        return {
-            'count': len(empty_untitled_files),
-            'cleanup_dir': cleanup_dir,
-            'log_file': cleanup_log_path
-        }
+        return {"count": len(empty_untitled_files), "cleanup_dir": cleanup_dir, "log_file": cleanup_log_path}
     else:
         if log:
             log("\nNo empty untitled files found.")
-        return {
-            'count': 0,
-            'cleanup_dir': None,
-            'log_file': None
-        }
+        return {"count": 0, "cleanup_dir": None, "log_file": None}
 
 
 def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
@@ -212,7 +201,7 @@ def copy_conversations_to_obsidian(data_dir, obsidian_dir, log=None):
             if file.endswith(".txt") and file not in ["conversation_titles.txt", "training_data.txt"]:
                 # Skip empty untitled files
                 src_path = os.path.join(root, file)
-                if 'untitled' in file.lower() and os.path.getsize(src_path) == 0:
+                if "untitled" in file.lower() and os.path.getsize(src_path) == 0:
                     continue
 
                 relative_path = os.path.relpath(root, source_data_dir)

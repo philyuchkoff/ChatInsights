@@ -23,6 +23,7 @@ dev = [
 
 [project.scripts]
 chat-insights = "chatinsights.gui:main"
+chat-insights-cli = "chatinsights.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["chatinsights*"]

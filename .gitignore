@@ -1,0 +1,24 @@
+# Личный файл задач (не должен попадать в репозиторий)
+todo.md
+
+# Личные данные и выходные файлы приложения
+config.json
+data/
+Obsidian/
+training_data.csv
+conversations.json
+pruned.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store

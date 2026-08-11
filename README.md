@@ -72,6 +72,19 @@ All exported `.md` and `.txt` files now include a header showing:
 - **Empty File Cleanup**: Automatically moves 0KB "untitled" files to cleanup folder
 - **Improved File Sorting**: Fixed sorting function for date extraction from filenames
 
+### 🛠️ Developer / Quality Improvements (August 2026)
+
+- **Code refactoring**: The monolith is split into a `chatinsights/` package (parsers, GUI, CLI, tracker, training, i18n) with a thin entry point.
+- **Unit & integration tests**: 110+ tests covering parsers, streaming, CLI, i18n and training data (`pytest`).
+- **Streaming for large exports**: Files over 50 MB are streamed with `ijson` instead of being loaded fully into memory.
+- **CLI mode**: Headless processing via `chat-insights-cli` (or `--cli` flag), perfect for servers and CI.
+- **i18n interface**: The GUI is fully translated into English and Russian (switchable in Settings).
+- **YAML frontmatter**: Conversation `.md` files in Obsidian include title/date/model frontmatter for Dataview & Templater.
+- **Symlink support**: `--symlink-conversations` links conversations into the Obsidian vault instead of copying them, saving disk space.
+- **Config backup**: `config.json` is backed up to `config.json.bak` before every save.
+- **Validation**: Friendly error messages for invalid JSON, BOM handling, empty and broken export files.
+- **CI pipeline**: GitHub Actions runs ruff, black, mypy and the test suite on Python 3.10–3.13.
+
 ---
 
 ## Features
@@ -82,18 +95,36 @@ All exported `.md` and `.txt` files now include a header showing:
 *   **Text Log Generation:** Creates individual `.txt` files for each conversation, organized by month and year in a `data` subdirectory.
 *   **Obsidian Vault Creation:** Automatically generates an Obsidian-ready vault structure:
     *   **Concept Notes:** Creates `.md` files for key concepts identified in conversation titles (using customizable regex). Includes metadata, evolution trends, related concepts, and links to relevant conversations.
-    *   **Conversation Logs:** Copies the raw conversation logs into an `Obsidian/Conversations` subdirectory (preserving the monthly structure) and converts them to `.md` files, allowing direct linking from concept notes.
+    *   **Conversation Logs:** Copies the raw conversation logs into an `Obsidian/Conversations` subdirectory (preserving the monthly structure) and converts them to `.md` files with YAML frontmatter (title/date/model), allowing direct linking from concept notes and use with Dataview/Templater.
     *   **Maps of Content (MOC):** Generates `Concepts-MOC.md` linking to all identified concept notes.
     *   **Dashboard:** Creates `Concept-Dashboard.md` with Dataview queries for visualizing concept data within Obsidian.
     *   **Term Analysis:** Generates `Recurring-Terms.md` highlighting frequently used terms in titles that might be potential new concepts.
 *   **Training Data Extraction:** Generates instruction-response pairs from user-assistant interactions in JSONL or CSV format, suitable for fine-tuning LLMs.
 *   **Streamlined Workflow:** The process of getting conversation logs into the Obsidian vault is now fully automated within the app.
-*   **GUI:** Provides a user-friendly interface built with Tkinter.
+*   **GUI:** Provides a user-friendly interface built with Tkinter (English & Russian).
+*   **CLI Mode:** Headless processing for scripts, servers and CI — see [Command Line](#command-line).
 
 ## Requirements
 
-*   Python 3.x
+*   Python 3.10 or newer
 *   Tkinter (usually included with standard Python installations)
+*   Optional: `ijson` (for streaming large exports over 50 MB)
+
+## Installation
+
+```bash
+# Clone the repository, then install the package (recommended):
+pip install -e .
+# Now you can run the GUI or the CLI from anywhere:
+chat-insights          # GUI
+chat-insights-cli      # CLI (headless)
+```
+
+Alternatively, run the app directly without installing:
+
+```bash
+python chat-insights-app.py
+```
 
 ## How to Use
 
@@ -130,6 +161,29 @@ All exported `.md` and `.txt` files now include a header showing:
     *   You can now browse the concept notes, MOC, dashboard, and click the links within concept notes (like `[[conversation_filename]]`) to directly open the corresponding conversation log.
 
 ---
+
+### 💻 Command Line
+
+Process exports headlessly (no GUI required):
+
+```bash
+chat-insights-cli conversations.json [options]
+
+# Full pipeline with custom names:
+chat-insights-cli conversations.json --user-name "Me" --assistant-name "GPT"
+
+# Skip training data or concept tracking:
+chat-insights-cli conversations.json --no-training
+chat-insights-cli conversations.json --no-concepts
+
+# Save disk space: symlink conversations into the Obsidian vault instead of copying:
+chat-insights-cli conversations.json --symlink-conversations
+
+# Force a platform or pick an output directory:
+chat-insights-cli conversations.json --platform chatgpt --output ~/MyVault
+```
+
+The GUI entry point also accepts a CLI flag: `python chat-insights-app.py --cli <file> [options]`.
 
 ### 📚 Universal Concept Tracker Template
 
@@ -171,6 +225,7 @@ Assuming the default output directory (`~/ChatInsights`):
 ```
 ~/ChatInsights/
 ├── config.json             # Stores application settings
+├── config.json.bak         # Automatic backup of the previous settings
 ├── data/                   # Raw processing output
 │   ├── April_2025/         # Example month/year folder
 │   │   ├── convo_title_1_dd_mm_yyyy_hh_mm_ss.txt
@@ -230,8 +285,8 @@ Assuming the default output directory (`~/ChatInsights`):
 - Requires `fragments` array in message structure
 
 ### General
-- Very large exports (500MB+) may be slow to process
-- Memory usage scales with export size
+- Very large exports (500 MB+) are processed in streaming mode; `ijson` is recommended for best performance
+- Memory usage is bounded in streaming mode (instead of scaling with export size)
 
 ---
 

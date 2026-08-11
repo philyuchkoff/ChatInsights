@@ -120,6 +120,17 @@ class ChatInsightsApp:
             "system": self.config["system_name"],
         }
 
+    def _load_default_concepts(self):
+        """Load default concept tracking list from the bundled resource file."""
+        resource = os.path.join(os.path.dirname(__file__), "default_concepts.txt")
+        try:
+            with open(resource, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content.strip()
+        except OSError as e:
+            logger.warning("Unable to load default concepts from %s: %s", resource, e)
+            return "AI: \\bAI\\b|Artificial Intelligence|GPT|Claude|LLM"
+
     def load_config(self):
         """Load configuration from file or create default"""
         try:
@@ -276,21 +287,7 @@ Once you've processed your AI export, you can run the concept tracker to:
         self.concepts_text = scrolledtext.ScrolledText(concepts_frame, height=10)
         self.concepts_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        # Add default concepts
-        default_concepts = """
-AI: \\bAI\\b|Artificial Intelligence|GPT|Claude|LLM|Language Model|Deepseek
-Claude: \\bClaude\\b|Anthropic
-ChatGPT: \\bChatGPT\\b|\\bGPT\\b|OpenAI
-Deepseek: \\bDeepseek\\b|\\bDeepSeek\\b
-Programming: Python|JavaScript|Code|Programming|Script|Function|API
-Framework: Framework|Library|Architecture|Structure|System
-Data: Data|Database|CSV|JSON|Analysis|Dataset
-Machine Learning: Machine Learning|ML|Training|Model|Neural|Deep Learning
-Development: Development|Software|Application|Project|Build
-Security: Security|Privacy|Encryption|Authentication|Safety
-Cloud: Cloud|AWS|Azure|Google Cloud|Deployment
-        """
-        self.concepts_text.insert(tk.END, default_concepts.strip())
+        self.concepts_text.insert(tk.END, self._load_default_concepts())
 
         # Run tracker button
         buttons_frame = ttk.Frame(frame)

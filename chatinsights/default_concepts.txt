@@ -1,0 +1,11 @@
+AI: \bAI\b|Artificial Intelligence|GPT|Claude|LLM|Language Model|Deepseek
+Claude: \bClaude\b|Anthropic
+ChatGPT: \bChatGPT\b|\bGPT\b|OpenAI
+Deepseek: \bDeepseek\b|\bDeepSeek\b
+Programming: Python|JavaScript|Code|Programming|Script|Function|API
+Framework: Framework|Library|Architecture|Structure|System
+Data: Data|Database|CSV|JSON|Analysis|Dataset
+Machine Learning: Machine Learning|ML|Training|Model|Neural|Deep Learning
+Development: Development|Software|Application|Project|Build
+Security: Security|Privacy|Encryption|Authentication|Safety
+Cloud: Cloud|AWS|Azure|Google Cloud|Deployment

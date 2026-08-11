@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chatinsights"
+version = "3.0.0"
+description = "AI Chat Export Analysis Tool for ChatGPT, Claude and Deepseek exports"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dependencies = [
+    "ijson>=3.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.4",
+    "black>=24.0",
+    "mypy>=1.8",
+]
+
+[project.scripts]
+chat-insights = "chatinsights.gui:main"
+
+[tool.setuptools.packages.find]
+include = ["chatinsights*"]
+
+[tool.black]
+line-length = 120
+target-version = ["py38"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+check_untyped_defs = false

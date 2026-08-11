@@ -882,3 +882,10 @@ v3 Improvements by GitHub Copilot (Claude Opus 4.5)
 
             self.save_config()
             messagebox.showinfo("Settings Reset", "Settings have been reset to defaults")
+
+
+def main():
+    """Launch the ChatInsights GUI application."""
+    root = tk.Tk()
+    app = ChatInsightsApp(root)
+    root.mainloop()

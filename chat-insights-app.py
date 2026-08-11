@@ -18,14 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 
-from chatinsights.gui import ChatInsightsApp
-
-
-def main():
-    root = tk.Tk()
-    app = ChatInsightsApp(root)
-    root.mainloop()
-
+from chatinsights.gui import ChatInsightsApp, main
 
 if __name__ == "__main__":
     main()
